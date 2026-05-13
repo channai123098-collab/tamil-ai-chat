@@ -160,10 +160,16 @@ export default function HomeScreen({ navigation }: Props) {
 
       <View style={styles.fabContainer}>
         <TouchableOpacity style={styles.fab} onPress={() => setShowGroupModal(true)}>
-          <Text style={styles.fabIcon}>👥</Text>
+          <View style={styles.fabInner}>
+            <Text style={styles.fabIconDark}>⊕</Text>
+            <Text style={styles.fabLabel}>Group</Text>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.fab, styles.fabPrimary]} onPress={() => navigation.navigate('FaceSwap')}>
-          <Text style={styles.fabIcon}>🤳</Text>
+        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('FaceSwap')}>
+          <View style={styles.fabInner}>
+            <Text style={styles.fabIconDark}>◈</Text>
+            <Text style={styles.fabLabel}>Swap</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -207,29 +213,34 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
   headerIcons: { flexDirection: 'row', gap: 16 },
   headerIcon: { fontSize: 20, color: '#fff' },
-  contactRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
-  avatar: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  contactInfo: { flex: 1, marginLeft: 12 },
-  contactTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-  contactName: { fontSize: 16, fontWeight: '600', color: '#111' },
-  contactTime: { fontSize: 12, color: '#888' },
+  contactRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 },
+  avatar: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  contactInfo: { flex: 1, marginLeft: 10 },
+  contactTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
+  contactName: { fontSize: 14, fontWeight: '600', color: '#111' },
+  contactTime: { fontSize: 11, color: '#888' },
   contactBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  lastMsg: { fontSize: 13, color: '#888', flex: 1 },
+  lastMsg: { fontSize: 12, color: '#888', flex: 1 },
   badge: {
-    backgroundColor: '#25D366', borderRadius: 10,
-    minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 5,
+    backgroundColor: '#25D366', borderRadius: 9,
+    minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
   },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
-  separator: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 76 },
-  fabContainer: { position: 'absolute', bottom: 24, right: 18, gap: 12 },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  separator: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 64 },
+  fabContainer: { position: 'absolute', bottom: 20, right: 14, gap: 10 },
   fab: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#128C7E', justifyContent: 'center',
-    alignItems: 'center', elevation: 5,
+    width: 60, height: 60, borderRadius: 16,
+    backgroundColor: '#E8F5F0',
+    justifyContent: 'center', alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15, shadowRadius: 6,
+    borderWidth: 1, borderColor: '#C8E6DC',
   },
-  fabPrimary: { backgroundColor: '#25D366' },
-  fabIcon: { fontSize: 24 },
+  fabInner: { alignItems: 'center', justifyContent: 'center' },
+  fabIconDark: { fontSize: 22, color: '#075E54', fontWeight: 'bold' },
+  fabLabel: { fontSize: 9, color: '#075E54', fontWeight: '700', marginTop: 1, letterSpacing: 0.5 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalBox: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '80%' },
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#075E54', marginBottom: 4 },
