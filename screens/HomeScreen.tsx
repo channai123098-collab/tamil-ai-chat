@@ -25,6 +25,16 @@ export interface Persona {
   faceDesc?: string;
   bodyDesc?: string;
   attireDesc?: string;
+  poseDesc?: string;
+  settingDesc?: string;
+  lightingDesc?: string;
+  artStyleDesc?: string;
+  modestNegative?: string;
+  bodyHandsNegative?: string;
+  qualityNegative?: string;
+  greeting?: string;
+  avatarLetter?: string;
+  avatarPhotoUri?: string;
 }
 
 const BASE_PROMPT = `நீ ஒரு WhatsApp chat-ல பேசுற மாதிரி எளிமையா, casual-ஆ பதில் சொல்லணும்.
@@ -153,10 +163,21 @@ export default function HomeScreen({ navigation }: Props) {
               const data = JSON.parse(saved);
               return {
                 ...p,
+                name: data.name ?? p.name,
                 prompt: data.prompt ?? p.prompt,
                 faceDesc: data.faceDesc ?? p.faceDesc,
                 bodyDesc: data.bodyDesc ?? p.bodyDesc,
                 attireDesc: data.attireDesc ?? p.attireDesc,
+                poseDesc: data.poseDesc,
+                settingDesc: data.settingDesc,
+                lightingDesc: data.lightingDesc,
+                artStyleDesc: data.artStyleDesc,
+                modestNegative: data.modestNegative,
+                bodyHandsNegative: data.bodyHandsNegative,
+                qualityNegative: data.qualityNegative,
+                greeting: data.greeting ?? p.greeting,
+                avatarLetter: data.avatarLetter ?? p.avatarLetter,
+                avatarPhotoUri: data.avatarPhotoUri,
               };
             }
             return p;
