@@ -11,6 +11,8 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  imageUrl?: string;
+  imageLoading?: boolean;
 }
 
 export async function sendMessage(
