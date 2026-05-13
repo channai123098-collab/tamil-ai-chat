@@ -39,7 +39,9 @@
       [
         "expo-build-properties",
         {
-          "android": {}
+          "android": {
+            "kotlinVersion": "2.1.20"
+          }
         }
       ]
     ],
