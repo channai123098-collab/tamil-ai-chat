@@ -10,11 +10,13 @@ import FaceSwapScreen from './screens/FaceSwapScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import EditCharacterScreen from './screens/EditCharacterScreen';
 import CloudStorageScreen from './screens/CloudStorageScreen';
+import OfflineChatScreen from './screens/OfflineChatScreen';
 import { Persona } from './screens/HomeScreen';
 
 export type RootStackParamList = {
   Home: undefined;
   Chat: { provider: string; providerLabel: string; persona?: Persona };
+  OfflineChat: { persona?: Persona };
   GroupChat: { personas: Persona[] };
   FaceSwap: undefined;
   Settings: undefined;
@@ -72,6 +74,16 @@ export default function App() {
             name="CloudStorage"
             component={CloudStorageScreen}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="OfflineChat"
+            component={OfflineChatScreen}
+            options={({ route }) => ({
+              title: route.params.persona?.name
+                ? `${route.params.persona.name} (Offline)`
+                : 'Offline AI Chat 📡',
+              headerStyle: { backgroundColor: '#FF6F00' },
+            })}
           />
         </Stack.Navigator>
       </NavigationContainer>
