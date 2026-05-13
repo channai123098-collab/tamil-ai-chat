@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useLayoutEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   FlatList, StyleSheet, KeyboardAvoidingView,
@@ -6,13 +6,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
 import { sendMessage, Message } from '../services/api';
 
 type ChatRouteProp = RouteProp<RootStackParamList, 'Chat'>;
-interface Props { route: ChatRouteProp; }
+type ChatNavProp = StackNavigationProp<RootStackParamList, 'Chat'>;
+interface Props { route: ChatRouteProp; navigation: ChatNavProp; }
 
-export default function ChatScreen({ route }: Props) {
+export default function ChatScreen({ route, navigation }: Props) {
   const { provider, persona } = route.params;
 
   const welcome = persona
@@ -25,6 +27,46 @@ export default function ChatScreen({ route }: Props) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  const clearChat = () => {
+    Alert.alert('Chat Clear பண்ணட்டுமா?', 'அனைத்து messages delete ஆகும்', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear', style: 'destructive',
+        onPress: () => setMessages([{ id: '0', role: 'assistant', content: welcome, timestamp: new Date() }]),
+      },
+    ]);
+  };
+
+  useLayoutEffect(() => {
+    if (!persona) return;
+    navigation.setOptions({
+      headerTitle: () => (
+        <View style={styles.headerTitleWrap}>
+          <View style={[styles.headerAvatar, { backgroundColor: persona.avatarColor }]}>
+            <Text style={styles.headerAvatarText}>{persona.emoji}</Text>
+          </View>
+          <View>
+            <Text style={styles.headerName}>{persona.name}</Text>
+            <Text style={styles.headerOnline}>online</Text>
+          </View>
+        </View>
+      ),
+      headerRight: () => (
+        <View style={styles.headerBtns}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => navigation.navigate('EditCharacter', { persona: persona! })}
+          >
+            <Text style={styles.headerBtnIcon}>✏️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerBtn} onPress={clearChat}>
+            <Text style={styles.headerBtnIcon}>🗑️</Text>
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [persona, navigation]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -129,6 +171,14 @@ export default function ChatScreen({ route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ECE5DD' },
   flex: { flex: 1 },
+  headerTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerAvatar: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  headerAvatarText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  headerName: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+  headerOnline: { color: '#b2dfdb', fontSize: 11 },
+  headerBtns: { flexDirection: 'row', alignItems: 'center', marginRight: 8, gap: 4 },
+  headerBtn: { padding: 6 },
+  headerBtnIcon: { fontSize: 18 },
   msgList: { padding: 10, paddingBottom: 4 },
   msgRow: { marginVertical: 3, flexDirection: 'row', alignItems: 'flex-end' },
   userRow: { justifyContent: 'flex-end' },
