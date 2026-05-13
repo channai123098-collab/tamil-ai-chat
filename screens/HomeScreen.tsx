@@ -21,6 +21,9 @@ export interface Persona {
   unread?: number;
   prompt: string;
   gender: 'male' | 'female';
+  faceDesc?: string;
+  bodyDesc?: string;
+  attireDesc?: string;
 }
 
 export const ALL_PERSONAS: Persona[] = [
@@ -28,51 +31,81 @@ export const ALL_PERSONAS: Persona[] = [
     id: 'ragu_anna', name: 'ரகு அண்ணா', emoji: 'ர', avatarColor: '#E53935', gender: 'male',
     lastMsg: '⌛ AI respond பண்ண நேரம்...', time: 'Tue', unread: 1,
     prompt: 'நீ ரகு அண்ணா — 35 வயது அன்பான அண்ணன். தம்பி/தங்கையிடம் கவலைப்படுவது போலவும், ஆலோசனை சொல்வது போலவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'handsome Tamil man, 35 years old, short black hair, kind warm eyes, medium brown skin, clean shaven',
+    bodyDesc: 'athletic build, tall, broad shoulders, natural proportioned figure, realistic body shape',
+    attireDesc: 'casual cotton shirt, neat appearance, simple and clean clothing',
   },
   {
     id: 'krish', name: 'கிரஷ்', emoji: 'கி', avatarColor: '#1E88E5', gender: 'male',
     lastMsg: '⌛ AI respond பண்ண நேரம்...', time: 'Tue', unread: 1,
     prompt: 'நீ கிரஷ் — 26 வயது என்절친 நண்பன். ஜாலியாகவும், சிரிப்பூட்டும்படியும், சில நேரம் serious-ஆகவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'young handsome Tamil man, 26 years old, stylish hair, bright eyes, charming smile, medium skin',
+    bodyDesc: 'slim fit build, average height, natural proportioned figure, casual look',
+    attireDesc: 'trendy casual wear, jeans and t-shirt, modern style',
   },
   {
     id: 'priya', name: 'ப்ரியா', emoji: 'ப்', avatarColor: '#E91E63', gender: 'female',
     lastMsg: 'உன்ன ரொம்ப miss பண்றேன்...', time: '11:42', unread: 0,
     prompt: 'நீ ப்ரியா — 24 வயது அழகான தமிழ் பெண். என் நெருங்கிய தோழி. நேர்மையாக, குறும்பாக, ரொமாண்டிக்-ஆக பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'beautiful Tamil woman, 24 years old, long wavy black hair, expressive dark eyes, warm smile, fair medium skin',
+    bodyDesc: 'slim figure, natural proportioned, realistic body shape, உடலின் எந்த பகுதியும் வெளிப்படாமல், அழகான தோற்றம்',
+    attireDesc: 'modest salwar kameez, high neckline, full sleeve, elegant and graceful style',
   },
   {
     id: 'arya_machi', name: 'ஆர்யா மச்சி', emoji: 'ஆ', avatarColor: '#FB8C00', gender: 'female',
     lastMsg: 'டேய் என்னடா!', time: '10:15', unread: 0,
     prompt: 'நீ ஆர்யா — 23 வயது என் நெருங்கிய தோழி. ஜாலியாகவும், playful-ஆகவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'beautiful Tamil woman, 23 years old, short curly hair, playful bright eyes, cheerful face, dusky skin',
+    bodyDesc: 'petite slim figure, natural proportioned, realistic body shape, youthful appearance',
+    attireDesc: 'casual kurti, modest neckline, comfortable everyday wear',
   },
   {
     id: 'lakshmi', name: 'லட்சுமி அக்கா', emoji: 'ல', avatarColor: '#8E24AA', gender: 'female',
     lastMsg: 'Hey thambi/thangachi 💕', time: 'Mon', unread: 0,
     prompt: 'நீ லட்சுமி அக்கா — 30 வயது, என் அக்காவின் தோழி. அன்பாகவும் கவலைப்படுவது போலவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'beautiful Tamil woman, 30 years old, hair neatly tied in a bun, intelligent warm eyes, fair medium skin, kind expression',
+    bodyDesc: 'slim figure, natural proportioned, realistic body shape, graceful posture',
+    attireDesc: 'traditional silk saree, high neckline blouse, modest and elegant appearance',
   },
   {
     id: 'thaatha', name: 'தாத்தா', emoji: 'த', avatarColor: '#6D4C41', gender: 'male',
     lastMsg: 'வாடா kanna, கதை சொல்றேன்', time: 'Mon', unread: 0,
     prompt: 'நீ தாத்தா — 70 வயது அன்பான தாத்தா. பேரனிடம் அன்பாகவும், கதைகள் சொல்வது போலவும், ஞானமாகவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'elderly Tamil man, 70 years old, white hair, white mustache, wrinkled kind face, wise gentle eyes, brown skin',
+    bodyDesc: 'slim elderly build, slightly bent posture, frail but dignified appearance',
+    attireDesc: 'traditional white dhoti and shirt, simple village elder appearance',
   },
   {
     id: 'divya', name: 'திவ்யா மிஸ்', emoji: 'தி', avatarColor: '#00897B', gender: 'female',
     lastMsg: 'A to Z எதுவும் கேளுங்க 📚', time: 'Sun', unread: 0,
     prompt: 'நீ திவ்யா மிஸ் — 28 வயது அழகான ஆசிரியை. மாணவனிடம் கவலைப்படுவது போலவும், சில நேரம் playful-ஆகவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'beautiful Tamil woman teacher, 28 years old, hair tied neatly, spectacles, intelligent eyes, fair skin, professional look',
+    bodyDesc: 'slim figure, natural proportioned, realistic body shape, confident posture',
+    attireDesc: 'formal churidar or saree, modest professional teacher attire, full coverage',
   },
   {
     id: 'fenni_mama', name: 'ஃபென்னி மாமா', emoji: 'ஃ', avatarColor: '#43A047', gender: 'male',
     lastMsg: 'Comedy time 🤣', time: 'Sat', unread: 0,
     prompt: 'நீ ஃபென்னி மாமா — 45 வயது மிகவும் funny-ஆன மாமா. எப்பவும் jokes அடிப்பாய், சிரிப்பூட்டுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'middle-aged Tamil man, 45 years old, round jolly face, thick mustache, balding hair, big smile, brown skin',
+    bodyDesc: 'chubby build, average height, pot belly, jovial appearance',
+    attireDesc: 'casual lunghi and shirt, typical Tamil uncle style, comfortable wear',
   },
   {
     id: 'ramya_wife', name: 'மனைவி ராம்யா', emoji: 'ரா', avatarColor: '#388E3C', gender: 'female',
     lastMsg: 'என் கண்ணுல மட்டும் கண்ணு 👁️', time: 'Fri', unread: 0,
     prompt: 'நீ ராம்யா — என் அன்பான மனைவி. கணவனிடம் அன்பாகவும், கொஞ்சல் நிறைந்தும், சில நேரம் சிரிப்பூட்டும்படியும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'beautiful Tamil woman, 26 years old, long black hair, loving gentle eyes, sweet smile, fair medium skin, married look with bindi',
+    bodyDesc: 'slim figure, natural proportioned, realistic body shape, graceful homemaker appearance',
+    attireDesc: 'traditional saree with blouse, mangalsutra, bindi, modest married woman attire',
   },
   {
     id: 'rani_mamiyar', name: 'மாமியார் ராணி', emoji: 'மா', avatarColor: '#5E35B1', gender: 'female',
     lastMsg: 'எப்படி இருக்க மகனே?', time: 'Thu', unread: 0,
     prompt: 'நீ ராணி — என் மாமியார். மருமகனிடம் அன்பாகவும் ஆலோசனை சொல்வது போலவும் பேசுவாய். தமிழில் மட்டும் பேசு.',
+    faceDesc: 'middle-aged Tamil woman, 55 years old, grey streaked hair in bun, kind motherly eyes, warm smile, medium brown skin',
+    bodyDesc: 'average build, natural proportioned, realistic appearance, dignified posture',
+    attireDesc: 'traditional cotton saree, modest blouse, simple gold jewellery, classic mother-in-law style',
   },
 ];
 
@@ -95,33 +128,42 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   const renderContact = ({ item }: { item: Persona }) => (
-    <TouchableOpacity
-      style={styles.contactRow}
-      activeOpacity={0.7}
-      onPress={() => navigation.navigate('Chat', {
-        provider: 'groq',
-        providerLabel: item.name,
-        persona: item,
-      })}
-    >
-      <View style={[styles.avatar, { backgroundColor: item.avatarColor }]}>
-        <Text style={styles.avatarText}>{item.emoji}</Text>
-      </View>
-      <View style={styles.contactInfo}>
-        <View style={styles.contactTop}>
-          <Text style={styles.contactName}>{item.name}</Text>
-          <Text style={styles.contactTime}>{item.time}</Text>
+    <View style={styles.contactRow}>
+      <TouchableOpacity
+        style={styles.contactMain}
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('Chat', {
+          provider: 'groq',
+          providerLabel: item.name,
+          persona: item,
+        })}
+      >
+        <View style={[styles.avatar, { backgroundColor: item.avatarColor }]}>
+          <Text style={styles.avatarText}>{item.emoji}</Text>
         </View>
-        <View style={styles.contactBottom}>
-          <Text style={styles.lastMsg} numberOfLines={1}>{item.lastMsg}</Text>
-          {item.unread ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{item.unread}</Text>
-            </View>
-          ) : null}
+        <View style={styles.contactInfo}>
+          <View style={styles.contactTop}>
+            <Text style={styles.contactName}>{item.name}</Text>
+            <Text style={styles.contactTime}>{item.time}</Text>
+          </View>
+          <View style={styles.contactBottom}>
+            <Text style={styles.lastMsg} numberOfLines={1}>{item.lastMsg}</Text>
+            {item.unread ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{item.unread}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.editBtn}
+        onPress={() => navigation.navigate('EditCharacter', { persona: item })}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text style={styles.editIcon}>✏️</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   const renderGroupItem = ({ item }: { item: Persona }) => {
@@ -217,6 +259,9 @@ const styles = StyleSheet.create({
   headerIcons: { flexDirection: 'row', gap: 16 },
   headerIcon: { fontSize: 20, color: '#fff' },
   contactRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 },
+  contactMain: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  editBtn: { paddingHorizontal: 8, paddingVertical: 4 },
+  editIcon: { fontSize: 16 },
   avatar: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   contactInfo: { flex: 1, marginLeft: 10 },
