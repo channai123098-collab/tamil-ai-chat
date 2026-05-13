@@ -46,3 +46,27 @@ export async function sendMessage(
 export async function getProviders(): Promise<string[]> {
   return ['groq'];
 }
+
+export async function uploadToCloudinary(
+  b64_json: string,
+  mimeType: string = 'image/jpeg',
+  folder: string = 'tamil-ai-chat',
+): Promise<{ url: string; public_id: string; width?: number; height?: number }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 40000);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/image/cloudinary-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ b64_json, mimeType, folder }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const err = await res.json() as any;
+      throw new Error(err?.error || `Upload failed: ${res.status}`);
+    }
+    return await res.json() as any;
+  } finally {
+    clearTimeout(timer);
+  }
+}
