@@ -8,7 +8,7 @@ import ChatScreen from './screens/ChatScreen';
 
 export type RootStackParamList = {
   Home: undefined;
-  Chat: { provider: string; providerLabel: string };
+  Chat: { provider: string; providerLabel: string; persona?: import('./screens/HomeScreen').Persona };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -33,7 +33,7 @@ export default function App() {
           <Stack.Screen
             name="Chat"
             component={ChatScreen}
-            options={({ route }) => ({ title: route.params.providerLabel })}
+            options={({ route }) => ({ title: route.params.persona?.name ?? route.params.providerLabel })}
           />
         </Stack.Navigator>
       </NavigationContainer>
