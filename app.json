@@ -44,9 +44,7 @@
             "ndkVersion": "27.1.12297006"
           }
         }
-      ],
-      "react-native-executorch",
-      "@react-native-community/netinfo"
+      ]
     ],
     "extra": {
       "eas": {
