@@ -7,6 +7,7 @@ import HomeScreen from './screens/HomeScreen';
 import ChatScreen from './screens/ChatScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import FaceSwapScreen from './screens/FaceSwapScreen';
+import SettingsScreen from './screens/SettingsScreen';
 import { Persona } from './screens/HomeScreen';
 
 export type RootStackParamList = {
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   Chat: { provider: string; providerLabel: string; persona?: Persona };
   GroupChat: { personas: Persona[] };
   FaceSwap: undefined;
+  Settings: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -51,6 +53,11 @@ export default function App() {
             name="FaceSwap"
             component={FaceSwapScreen}
             options={{ title: 'Face Swap 🤳' }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ title: 'Settings ⚙️' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
