@@ -216,6 +216,12 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={styles.fabLabel}>Swap</Text>
           </View>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CloudStorage')}>
+          <View style={styles.fabInner}>
+            <Text style={styles.fabIconDark}>☁️</Text>
+            <Text style={styles.fabLabel}>Cloud</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       <Modal visible={showGroupModal} animationType="slide" transparent>
