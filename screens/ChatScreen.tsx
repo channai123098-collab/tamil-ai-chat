@@ -1,36 +1,25 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  SafeAreaView,
-  Alert,
+  View, Text, TextInput, TouchableOpacity,
+  FlatList, StyleSheet, KeyboardAvoidingView,
+  Platform, ActivityIndicator, SafeAreaView, Alert,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
 import { sendMessage, Message } from '../services/api';
 
 type ChatRouteProp = RouteProp<RootStackParamList, 'Chat'>;
-
-interface Props {
-  route: ChatRouteProp;
-}
+interface Props { route: ChatRouteProp; }
 
 export default function ChatScreen({ route }: Props) {
-  const { provider } = route.params;
+  const { provider, persona } = route.params;
+
+  const welcome = persona
+    ? `வணக்கம்! நான் ${persona.name}. என்ன கதைக்கணும்? 😊`
+    : 'வணக்கம்! நான் Tamil AI. என்ன உதவி செய்யட்டும்? 😊';
+
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '0',
-      role: 'assistant',
-      content: 'வணக்கம்! நான் உங்கள் தமிழ் AI. என்ன உதவி செய்யட்டும்? 😊',
-      timestamp: new Date(),
-    },
+    { id: '0', role: 'assistant', content: welcome, timestamp: new Date() },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,24 +36,19 @@ export default function ChatScreen({ route }: Props) {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
     try {
-      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const history = messages.map(m => ({ role: m.role, content: m.content }));
       history.push({ role: 'user', content: text });
 
-      const reply = await sendMessage(history, provider);
+      const reply = await sendMessage(history, provider, persona?.prompt);
 
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: reply,
-          timestamp: new Date(),
-        },
+        { id: (Date.now() + 1).toString(), role: 'assistant', content: reply, timestamp: new Date() },
       ]);
     } catch (err: any) {
       Alert.alert('பிழை', err?.message || 'பதில் வரவில்லை. மீண்டும் முயல்க.');
@@ -72,12 +56,17 @@ export default function ChatScreen({ route }: Props) {
       setLoading(false);
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     }
-  }, [input, loading, messages, provider]);
+  }, [input, loading, messages, provider, persona]);
 
   const renderItem = ({ item }: { item: Message }) => {
     const isUser = item.role === 'user';
     return (
       <View style={[styles.msgRow, isUser ? styles.userRow : styles.aiRow]}>
+        {!isUser && persona && (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarEmoji}>{persona.emoji}</Text>
+          </View>
+        )}
         <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
           <Text style={styles.msgText}>{item.content}</Text>
           <Text style={styles.timeText}>
@@ -98,7 +87,7 @@ export default function ChatScreen({ route }: Props) {
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.msgList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -107,7 +96,9 @@ export default function ChatScreen({ route }: Props) {
           <View style={styles.loadingRow}>
             <View style={styles.loadingBubble}>
               <ActivityIndicator size="small" color="#075E54" />
-              <Text style={styles.loadingText}>பதில் தயாராகிறது...</Text>
+              <Text style={styles.loadingText}>
+                {persona ? `${persona.name} பதில் அளிக்கிறார்...` : 'பதில் தயாராகிறது...'}
+              </Text>
             </View>
           </View>
         )}
@@ -138,59 +129,38 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ECE5DD' },
   flex: { flex: 1 },
   msgList: { padding: 10, paddingBottom: 4 },
-  msgRow: { marginVertical: 3, flexDirection: 'row' },
+  msgRow: { marginVertical: 3, flexDirection: 'row', alignItems: 'flex-end' },
   userRow: { justifyContent: 'flex-end' },
-  aiRow: { justifyContent: 'flex-start' },
-  bubble: {
-    maxWidth: '80%',
-    borderRadius: 10,
-    padding: 10,
-    paddingBottom: 6,
-    elevation: 1,
+  aiRow: { justifyContent: 'flex-start', gap: 6 },
+  avatar: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: '#fff', justifyContent: 'center',
+    alignItems: 'center', elevation: 1, marginBottom: 2,
   },
+  avatarEmoji: { fontSize: 18 },
+  bubble: { maxWidth: '75%', borderRadius: 10, padding: 10, paddingBottom: 6, elevation: 1 },
   userBubble: { backgroundColor: '#DCF8C6', borderTopRightRadius: 2 },
   aiBubble: { backgroundColor: '#fff', borderTopLeftRadius: 2 },
   msgText: { fontSize: 15, lineHeight: 22, color: '#111' },
   timeText: { fontSize: 10, color: '#888', alignSelf: 'flex-end', marginTop: 3 },
   loadingRow: { flexDirection: 'row', padding: 8, paddingLeft: 14 },
   loadingBubble: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#fff', borderRadius: 10, padding: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
   },
   loadingText: { color: '#075E54', fontSize: 13 },
   inputBar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    gap: 8,
+    flexDirection: 'row', alignItems: 'flex-end', padding: 8,
+    backgroundColor: '#F0F0F0', borderTopWidth: 1, borderTopColor: '#ddd', gap: 8,
   },
   input: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 15,
-    maxHeight: 120,
-    color: '#111',
-    borderWidth: 1,
-    borderColor: '#ddd',
+    flex: 1, backgroundColor: '#fff', borderRadius: 24,
+    paddingHorizontal: 16, paddingVertical: 10, fontSize: 15,
+    maxHeight: 120, color: '#111', borderWidth: 1, borderColor: '#ddd',
   },
   sendBtn: {
-    backgroundColor: '#25D366',
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
+    backgroundColor: '#25D366', width: 46, height: 46,
+    borderRadius: 23, justifyContent: 'center', alignItems: 'center', elevation: 2,
   },
   sendBtnDisabled: { backgroundColor: '#a8d5b5' },
   sendIcon: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
