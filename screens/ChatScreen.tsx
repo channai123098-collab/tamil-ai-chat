@@ -22,16 +22,13 @@ interface Props {
   route: ChatRouteProp;
 }
 
-const SYSTEM_PROMPT =
-  'நீ ஒரு தமிழ் AI assistant. எப்பொழுதும் தமிழிலேயே பதில் சொல். நட்பாகவும் உதவியாகவும் இரு.';
-
 export default function ChatScreen({ route }: Props) {
   const { provider } = route.params;
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '0',
       role: 'assistant',
-      content: 'வணக்கம்! நான் உங்கள் தமிழ் AI assistant. என்ன உதவி செய்யட்டும்? 😊',
+      content: 'வணக்கம்! நான் உங்கள் தமிழ் AI. என்ன உதவி செய்யட்டும்? 😊',
       timestamp: new Date(),
     },
   ]);
@@ -55,24 +52,22 @@ export default function ChatScreen({ route }: Props) {
     setLoading(true);
 
     try {
-      const history = [
-        { role: 'user', content: SYSTEM_PROMPT },
-        { role: 'assistant', content: 'சரி, தமிழிலேயே பேசுவேன்.' },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-        { role: 'user', content: text },
-      ];
+      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      history.push({ role: 'user', content: text });
 
       const reply = await sendMessage(history, provider);
 
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: reply,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: reply,
+          timestamp: new Date(),
+        },
+      ]);
     } catch (err: any) {
-      Alert.alert('பிழை', 'பதில் வரவில்லை. மீண்டும் முயல்க.');
+      Alert.alert('பிழை', err?.message || 'பதில் வரவில்லை. மீண்டும் முயல்க.');
     } finally {
       setLoading(false);
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
@@ -84,14 +79,9 @@ export default function ChatScreen({ route }: Props) {
     return (
       <View style={[styles.msgRow, isUser ? styles.userRow : styles.aiRow]}>
         <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-          <Text style={[styles.msgText, isUser ? styles.userText : styles.aiText]}>
-            {item.content}
-          </Text>
+          <Text style={styles.msgText}>{item.content}</Text>
           <Text style={styles.timeText}>
-            {item.timestamp.toLocaleTimeString('ta-IN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {item.timestamp.toLocaleTimeString('ta-IN', { hour: '2-digit', minute: '2-digit' })}
           </Text>
         </View>
       </View>
@@ -111,9 +101,7 @@ export default function ChatScreen({ route }: Props) {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.msgList}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: true })
-          }
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
         {loading && (
           <View style={styles.loadingRow}>
@@ -132,7 +120,6 @@ export default function ChatScreen({ route }: Props) {
             placeholderTextColor="#999"
             multiline
             maxLength={1000}
-            onSubmitEditing={handleSend}
           />
           <TouchableOpacity
             style={[styles.sendBtn, (!input.trim() || loading) && styles.sendBtnDisabled]}
@@ -160,22 +147,10 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingBottom: 6,
     elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
   },
-  userBubble: {
-    backgroundColor: '#DCF8C6',
-    borderTopRightRadius: 2,
-  },
-  aiBubble: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 2,
-  },
-  msgText: { fontSize: 15, lineHeight: 22 },
-  userText: { color: '#111' },
-  aiText: { color: '#111' },
+  userBubble: { backgroundColor: '#DCF8C6', borderTopRightRadius: 2 },
+  aiBubble: { backgroundColor: '#fff', borderTopLeftRadius: 2 },
+  msgText: { fontSize: 15, lineHeight: 22, color: '#111' },
   timeText: { fontSize: 10, color: '#888', alignSelf: 'flex-end', marginTop: 3 },
   loadingRow: { flexDirection: 'row', padding: 8, paddingLeft: 14 },
   loadingBubble: {
