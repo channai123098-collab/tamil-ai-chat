@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useRef, useCallback, useLayoutEffect, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   FlatList, StyleSheet, KeyboardAvoidingView,
@@ -10,6 +10,8 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
 import { sendMessage, Message, listCloudinaryImages } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 type ChatRouteProp = RouteProp<RootStackParamList, 'Chat'>;
 type ChatNavProp = StackNavigationProp<RootStackParamList, 'Chat'>;
@@ -41,7 +43,7 @@ export default function ChatScreen({ route, navigation }: Props) {
   const { provider, persona } = route.params;
 
   const welcome = persona
-    ? `வணக்கம்! நான் ${persona.name}. என்ன கதைக்கணும்? 😊`
+    ? (persona.greeting?.trim() || `வணக்கம்! நான் ${persona.name}. என்ன கதைக்கணும்? 😊`)
     : 'வணக்கம்! நான் Tamil AI. என்ன உதவி செய்யட்டும்? 😊';
 
   const [messages, setMessages] = useState<Message[]>([
@@ -51,6 +53,7 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [showStylePicker, setShowStylePicker] = useState(false);
   const [fetchingImages, setFetchingImages] = useState(false);
+  const [avatarUri, setAvatarUri] = useState<string | undefined>(persona?.avatarPhotoUri);
 
   // Image viewer state
   const [viewerImages, setViewerImages] = useState<CloudImg[]>([]);
@@ -70,14 +73,42 @@ export default function ChatScreen({ route, navigation }: Props) {
     ]);
   };
 
+  const pickAvatarPhoto = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { Alert.alert('Permission', 'Gallery permission வேணும்'); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85, allowsEditing: true, aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0] && persona) {
+      const uri = result.assets[0].uri;
+      setAvatarUri(uri);
+      try {
+        const saved = await AsyncStorage.getItem(`persona_edit_${persona.id}`);
+        const data = saved ? JSON.parse(saved) : {};
+        data.avatarPhotoUri = uri;
+        await AsyncStorage.setItem(`persona_edit_${persona.id}`, JSON.stringify(data));
+      } catch {}
+    }
+  };
+
   useLayoutEffect(() => {
     if (!persona) return;
     navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerTitleWrap}>
-          <View style={[styles.headerAvatar, { backgroundColor: persona.avatarColor }]}>
-            <Text style={styles.headerAvatarText}>{persona.emoji}</Text>
-          </View>
+          <TouchableOpacity onPress={pickAvatarPhoto} style={styles.headerAvatarBtn}>
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.headerAvatarImg} />
+            ) : (
+              <View style={[styles.headerAvatar, { backgroundColor: persona.avatarColor }]}>
+                <Text style={styles.headerAvatarText}>{persona.avatarLetter || persona.emoji}</Text>
+              </View>
+            )}
+            <View style={styles.headerCamBadge}>
+              <Text style={{ fontSize: 8 }}>📷</Text>
+            </View>
+          </TouchableOpacity>
           <View>
             <Text style={styles.headerName}>{persona.name}</Text>
             <Text style={styles.headerOnline}>online</Text>
@@ -98,7 +129,7 @@ export default function ChatScreen({ route, navigation }: Props) {
         </View>
       ),
     });
-  }, [persona, navigation]);
+  }, [persona, navigation, avatarUri]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -358,6 +389,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ECE5DD' },
   flex: { flex: 1 },
   headerTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerAvatarBtn: { position: 'relative', marginRight: 8 },
+  headerAvatarImg: { width: 36, height: 36, borderRadius: 18 },
+  headerCamBadge: {
+    position: 'absolute', bottom: -2, right: -2,
+    backgroundColor: '#fff', borderRadius: 8,
+    width: 16, height: 16, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#ccc',
+  },
   headerAvatar: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   headerAvatarText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
   headerName: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
