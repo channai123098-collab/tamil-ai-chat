@@ -9,6 +9,7 @@ import GroupChatScreen from './screens/GroupChatScreen';
 import FaceSwapScreen from './screens/FaceSwapScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import EditCharacterScreen from './screens/EditCharacterScreen';
+import CloudStorageScreen from './screens/CloudStorageScreen';
 import { Persona } from './screens/HomeScreen';
 
 export type RootStackParamList = {
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   FaceSwap: undefined;
   Settings: undefined;
   EditCharacter: { persona: Persona };
+  CloudStorage: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -65,6 +67,11 @@ export default function App() {
             name="EditCharacter"
             component={EditCharacterScreen}
             options={{ title: 'Edit character' }}
+          />
+          <Stack.Screen
+            name="CloudStorage"
+            component={CloudStorageScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>
