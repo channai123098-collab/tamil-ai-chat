@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tamil AI Chat",
     "slug": "tamil-ai-chat",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -40,10 +40,13 @@
         "expo-build-properties",
         {
           "android": {
-            "kotlinVersion": "2.0.21"
+            "kotlinVersion": "2.0.21",
+            "ndkVersion": "27.1.12297006"
           }
         }
-      ]
+      ],
+      "react-native-executorch",
+      "@react-native-community/netinfo"
     ],
     "extra": {
       "eas": {
