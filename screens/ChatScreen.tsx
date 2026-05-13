@@ -12,6 +12,7 @@ import { RootStackParamList } from '../App';
 import { sendMessage, Message, generateImage, listCloudinaryImages } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import NetInfo from '@react-native-community/netinfo';
 
 type ChatRouteProp = RouteProp<RootStackParamList, 'Chat'>;
 type ChatNavProp = StackNavigationProp<RootStackParamList, 'Chat'>;
@@ -46,6 +47,7 @@ export default function ChatScreen({ route, navigation }: Props) {
     ? (persona.greeting?.trim() || `வணக்கம்! நான் ${persona.name}. என்ன கதைக்கணும்? 😊`)
     : 'வணக்கம்! நான் Tamil AI. என்ன உதவி செய்யட்டும்? 😊';
 
+  const [isOnline, setIsOnline] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     { id: '0', role: 'assistant', content: welcome, timestamp: new Date() },
   ]);
@@ -64,6 +66,14 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [showViewer, setShowViewer] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected !== false);
+    });
+    NetInfo.fetch().then(state => setIsOnline(state.isConnected !== false));
+    return () => unsubscribe();
+  }, []);
 
   const clearChat = () => {
     Alert.alert('Chat Clear பண்ணட்டுமா?', 'அனைத்து messages delete ஆகும்', [
@@ -251,6 +261,17 @@ export default function ChatScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {!isOnline && (
+        <TouchableOpacity
+          style={styles.offlineBanner}
+          onPress={() => navigation.navigate('OfflineChat', { persona: persona ?? undefined })}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.offlineBannerText}>
+            📡 No Internet — Tap to use Offline AI Chat
+          </Text>
+        </TouchableOpacity>
+      )}
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -452,6 +473,11 @@ export default function ChatScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ECE5DD' },
+  offlineBanner: {
+    backgroundColor: '#E65100', paddingVertical: 8, paddingHorizontal: 14,
+    alignItems: 'center',
+  },
+  offlineBannerText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   flex: { flex: 1 },
   headerTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerAvatarBtn: { position: 'relative', marginRight: 8 },
