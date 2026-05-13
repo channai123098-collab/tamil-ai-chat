@@ -43,8 +43,7 @@
             "kotlinVersion": "2.0.21"
           }
         }
-      ],
-      "expo-updates"
+      ]
     ],
     "extra": {
       "eas": {
