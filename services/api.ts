@@ -49,6 +49,52 @@ export async function getProviders(): Promise<string[]> {
   return ['groq'];
 }
 
+export async function generateImage(params: {
+  imgFace?: string;
+  imgBody?: string;
+  imgAttire?: string;
+  imagePrompt?: string;
+  personaName?: string;
+  mode?: 'single' | 'together';
+}): Promise<{ b64_json: string; mimeType: string }> {
+  const startRes = await fetch(`${API_BASE_URL}/api/image/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider: 'stablehorde',
+      mode: params.mode ?? 'single',
+      imgFace: params.imgFace,
+      imgBody: params.imgBody,
+      imgAttire: params.imgAttire,
+      imagePrompt: params.imagePrompt,
+      personaName: params.personaName,
+      apiKeys: { stablehorde: '0000000000' },
+    }),
+  });
+
+  if (!startRes.ok) throw new Error(`Start failed: ${startRes.status}`);
+  const { jobId } = await startRes.json() as { jobId: string };
+  if (!jobId) throw new Error('No job ID received from server');
+
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const pollRes = await fetch(`${API_BASE_URL}/api/image/status/${jobId}`);
+      if (!pollRes.ok) continue;
+      const data = await pollRes.json() as any;
+      if (data.status === 'done' && data.result) {
+        return data.result as { b64_json: string; mimeType: string };
+      }
+      if (data.status === 'error') {
+        throw new Error(data.userMessage || data.error || 'Image generation failed');
+      }
+    } catch (e: any) {
+      if (e.message && !e.message.includes('fetch')) throw e;
+    }
+  }
+  throw new Error('⏱ Timeout — Stable Horde queue மிகவும் long. மீண்டும் try பண்ணுங்க.');
+}
+
 export async function listCloudinaryImages(
   folder: string,
 ): Promise<{ url: string; public_id: string }[]> {
