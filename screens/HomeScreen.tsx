@@ -148,7 +148,9 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.headerTitle}>Tamil AI Chat</Text>
         <View style={styles.headerIcons}>
           <Text style={styles.headerIcon}>🔍</Text>
-          <Text style={styles.headerIcon}>⋮</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+            <Text style={styles.headerIcon}>⚙️</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
