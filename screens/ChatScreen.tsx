@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
-import { sendMessage, Message, listCloudinaryImages } from '../services/api';
+import { sendMessage, Message, generateImage, listCloudinaryImages } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -51,11 +51,13 @@ export default function ChatScreen({ route, navigation }: Props) {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showStylePicker, setShowStylePicker] = useState(false);
-  const [fetchingImages, setFetchingImages] = useState(false);
+  const [showGenModal, setShowGenModal] = useState(false);
+  const [genPrompt, setGenPrompt] = useState('');
+  const [generatingPhoto, setGeneratingPhoto] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | undefined>(persona?.avatarPhotoUri);
+  const [fullViewImg, setFullViewImg] = useState<string | null>(null);
 
-  // Image viewer state
+  // Cloudinary viewer state (kept for My Cloud photos)
   const [viewerImages, setViewerImages] = useState<CloudImg[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerStyle, setViewerStyle] = useState('');
@@ -162,40 +164,48 @@ export default function ChatScreen({ route, navigation }: Props) {
     }
   }, [input, loading, messages, provider, persona]);
 
-  const handleStyleSelect = async (style: typeof PHOTO_STYLES[0]) => {
-    setShowStylePicker(false);
-    setFetchingImages(true);
+  const handleGeneratePhoto = async () => {
+    if (!persona) return;
+    setShowGenModal(false);
+    setGeneratingPhoto(true);
 
-    const characterName = persona?.name || 'Unknown';
-    const folder = `My AI Girls/${style.folder}/${characterName}`;
+    const loadingId = Date.now().toString();
+    const loadingMsg: Message = {
+      id: loadingId,
+      role: 'assistant',
+      content: '🎨 Stable Horde-ல் photo generate பண்றேன்... (1-3 நிமிஷம் ஆகலாம்)',
+      timestamp: new Date(),
+      imageLoading: true,
+    };
+    setMessages(prev => [...prev, loadingMsg]);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 
     try {
-      const imgs = await listCloudinaryImages(folder);
-      if (!imgs || imgs.length === 0) {
-        Alert.alert(
-          '📂 Photos இல்லை',
-          `My Cloud-ல் "${style.folder} → ${characterName}" folder-ல் photos இல்லை.\n\nMy Cloud app-ல் upload பண்ணுங்க!`,
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-      setViewerImages(imgs);
-      setViewerIndex(0);
-      setViewerStyle(`${style.label} — ${characterName}`);
-      setShowViewer(true);
+      const result = await generateImage({
+        imgFace: persona.faceDesc,
+        imgBody: persona.bodyDesc,
+        imgAttire: persona.attireDesc,
+        imagePrompt: genPrompt.trim() || undefined,
+        personaName: persona.name,
+        mode: 'single',
+      });
 
-      const chatMsg: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `📸 ${style.label} — ${imgs.length} photos found! Viewer open ஆச்சு ✅`,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, chatMsg]);
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 200);
+      const dataUri = `data:${result.mimeType};base64,${result.b64_json}`;
+      setMessages(prev => prev.map(m =>
+        m.id === loadingId
+          ? { ...m, content: '📸 Photo ready! Tap to view full screen.', imageLoading: false, imageUrl: dataUri }
+          : m
+      ));
     } catch (err: any) {
-      Alert.alert('பிழை', `Photos fetch ஆகல: ${err?.message || 'Try again'}`);
+      setMessages(prev => prev.map(m =>
+        m.id === loadingId
+          ? { ...m, content: `❌ Generate பண்ண முடியல:\n${err?.message || 'Try again'}`, imageLoading: false }
+          : m
+      ));
     } finally {
-      setFetchingImages(false);
+      setGeneratingPhoto(false);
+      setGenPrompt('');
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 200);
     }
   };
 
@@ -205,11 +215,30 @@ export default function ChatScreen({ route, navigation }: Props) {
       <View style={[styles.msgRow, isUser ? styles.userRow : styles.aiRow]}>
         {!isUser && persona && (
           <View style={styles.avatar}>
-            <Text style={styles.avatarEmoji}>{persona.emoji}</Text>
+            {avatarUri
+              ? <Image source={{ uri: avatarUri }} style={styles.avatarImg} />
+              : <Text style={styles.avatarEmoji}>{persona.avatarLetter || persona.emoji}</Text>
+            }
           </View>
         )}
         <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-          <Text style={styles.msgText}>{item.content}</Text>
+          {item.imageLoading ? (
+            <View style={styles.imgLoadingWrap}>
+              <ActivityIndicator color="#075E54" size="small" />
+              <Text style={styles.msgText}>{item.content}</Text>
+            </View>
+          ) : item.imageUrl ? (
+            <TouchableOpacity onPress={() => setFullViewImg(item.imageUrl!)}>
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.generatedImg}
+                resizeMode="cover"
+              />
+              <Text style={[styles.msgText, { marginTop: 4 }]}>{item.content}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.msgText}>{item.content}</Text>
+          )}
           <Text style={styles.timeText}>
             {item.timestamp.toLocaleTimeString('ta-IN', { hour: '2-digit', minute: '2-digit' })}
           </Text>
@@ -259,10 +288,10 @@ export default function ChatScreen({ route, navigation }: Props) {
           <View style={styles.btnStack}>
             <TouchableOpacity
               style={styles.cameraBtn}
-              onPress={() => setShowStylePicker(true)}
-              disabled={fetchingImages}
+              onPress={() => setShowGenModal(true)}
+              disabled={generatingPhoto}
             >
-              {fetchingImages
+              {generatingPhoto
                 ? <ActivityIndicator color="#fff" size="small" />
                 : <Text style={styles.cameraIcon}>📷</Text>
               }
@@ -278,49 +307,85 @@ export default function ChatScreen({ route, navigation }: Props) {
         </View>
       </KeyboardAvoidingView>
 
-      {/* ── Photo Style Picker Modal ── */}
+      {/* ── Stable Horde Generate Modal ── */}
       <Modal
-        visible={showStylePicker}
+        visible={showGenModal}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowStylePicker(false)}
+        onRequestClose={() => setShowGenModal(false)}
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setShowStylePicker(false)}
+          onPress={() => setShowGenModal(false)}
         >
-          <View style={styles.pickerSheet}>
-            <View style={styles.pickerHandle} />
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>📸 Photo Style தேர்ந்தெடு</Text>
-              <TouchableOpacity onPress={() => setShowStylePicker(false)}>
-                <Text style={styles.pickerClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            {persona && (
-              <View style={styles.pickerCharInfo}>
-                <Text style={styles.pickerCharText}>
-                  👤 {persona.name} — My Cloud-ல் இருந்து photos fetch ஆகும்
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.pickerSheet}>
+              <View style={styles.pickerHandle} />
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>🎨 AI Photo Generate</Text>
+                <TouchableOpacity onPress={() => setShowGenModal(false)}>
+                  <Text style={styles.pickerClose}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              {persona && (
+                <View style={styles.pickerCharInfo}>
+                  <Text style={styles.pickerCharText}>
+                    👤 {persona.name} — Stable Horde (Free) மூலம் AI photo உருவாக்கும்
+                  </Text>
+                </View>
+              )}
+              <View style={{ padding: 16 }}>
+                <Text style={styles.genLabel}>Scene / Pose (optional)</Text>
+                <TextInput
+                  style={styles.genInput}
+                  value={genPrompt}
+                  onChangeText={setGenPrompt}
+                  placeholder="e.g. sitting on bed, smiling..."
+                  placeholderTextColor="#aaa"
+                  multiline
+                />
+                <Text style={styles.genHint}>
+                  Empty-ஆ விட்டா character default pose-ல் generate ஆகும்
+                </Text>
+                <TouchableOpacity
+                  style={styles.genBtn}
+                  onPress={handleGeneratePhoto}
+                  disabled={generatingPhoto}
+                >
+                  <Text style={styles.genBtnText}>🎨 Generate Photo</Text>
+                </TouchableOpacity>
+                <Text style={styles.genNote}>
+                  ⏱ 1-3 நிமிஷம் ஆகலாம் — Stable Horde free queue
                 </Text>
               </View>
-            )}
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {PHOTO_STYLES.map(style => (
-                <TouchableOpacity
-                  key={style.id}
-                  style={styles.styleRow}
-                  onPress={() => handleStyleSelect(style)}
-                >
-                  <Text style={styles.styleArrow}>📂</Text>
-                  <Text style={styles.styleLabel}>{style.label}</Text>
-                  <Text style={styles.styleChevron}>›</Text>
-                </TouchableOpacity>
-              ))}
-              <View style={{ height: 30 }} />
-            </ScrollView>
-          </View>
+            </View>
+          </TouchableOpacity>
         </TouchableOpacity>
+      </Modal>
+
+      {/* ── Full-screen Image Viewer ── */}
+      <Modal
+        visible={!!fullViewImg}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={() => setFullViewImg(null)}
+      >
+        <View style={styles.viewerBg}>
+          <TouchableOpacity
+            style={styles.viewerClose}
+            onPress={() => setFullViewImg(null)}
+          >
+            <Text style={styles.viewerCloseText}>✕</Text>
+          </TouchableOpacity>
+          {fullViewImg && (
+            <Image
+              source={{ uri: fullViewImg }}
+              style={styles.viewerImg}
+              resizeMode="contain"
+            />
+          )}
+        </View>
       </Modal>
 
       {/* ── Image Viewer Modal ── */}
@@ -408,8 +473,18 @@ const styles = StyleSheet.create({
   msgRow: { marginVertical: 3, flexDirection: 'row', alignItems: 'flex-end' },
   userRow: { justifyContent: 'flex-end' },
   aiRow: { justifyContent: 'flex-start', gap: 6 },
-  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 1, marginBottom: 2 },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 1, marginBottom: 2, overflow: 'hidden' },
+  avatarImg: { width: 34, height: 34, borderRadius: 17 },
   avatarEmoji: { fontSize: 18 },
+  imgLoadingWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  generatedImg: { width: 220, height: 280, borderRadius: 8, marginBottom: 4 },
+  // Generate modal
+  genLabel: { fontSize: 13, fontWeight: '600', color: '#444', marginBottom: 8 },
+  genInput: { backgroundColor: '#f8f8f8', borderRadius: 10, borderWidth: 1, borderColor: '#ddd', padding: 12, fontSize: 14, color: '#222', minHeight: 70, textAlignVertical: 'top', marginBottom: 6 },
+  genHint: { fontSize: 12, color: '#aaa', marginBottom: 16 },
+  genBtn: { backgroundColor: '#075E54', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  genBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  genNote: { fontSize: 12, color: '#888', textAlign: 'center' },
   bubble: { maxWidth: '75%', borderRadius: 10, padding: 10, paddingBottom: 6, elevation: 1 },
   userBubble: { backgroundColor: '#DCF8C6', borderTopRightRadius: 2 },
   aiBubble: { backgroundColor: '#fff', borderTopLeftRadius: 2 },
