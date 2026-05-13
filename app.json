@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -21,8 +21,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#075E54"
       },
-      "package": "com.smk1.tamilaichat",
-      "edgeToEdgeEnabled": false
+      "package": "com.smk1.tamilaichat"
     },
     "web": {
       "favicon": "./assets/favicon.png"
