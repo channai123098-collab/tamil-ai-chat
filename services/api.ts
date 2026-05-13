@@ -49,6 +49,27 @@ export async function getProviders(): Promise<string[]> {
   return ['groq'];
 }
 
+export async function listCloudinaryImages(
+  folder: string,
+): Promise<{ url: string; public_id: string }[]> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/api/image/cloudinary-list?folder=${encodeURIComponent(folder)}`,
+      { signal: controller.signal },
+    );
+    if (!res.ok) {
+      const err = await res.json() as any;
+      throw new Error(err?.error || `List failed: ${res.status}`);
+    }
+    const data = await res.json() as any;
+    return data.images || [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function uploadToCloudinary(
   b64_json: string,
   mimeType: string = 'image/jpeg',
