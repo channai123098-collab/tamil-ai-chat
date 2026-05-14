@@ -22,6 +22,19 @@ const { width, height } = Dimensions.get('window');
 
 interface CloudImg { url: string; public_id: string; }
 
+const PHOTO_STYLES = [
+  { id: 'normal',    label: 'Normal Photo 📷',                          prompt: 'normal photo, fully clothed, casual' },
+  { id: 'nude',      label: 'Nude / நேரடி நிர்வாணம் 🔞',               prompt: 'nude, fully naked, explicit' },
+  { id: 'seminude',  label: 'Semi-nude / அரை நிர்வாணம்',               prompt: 'semi nude, partially undressed' },
+  { id: 'breast',    label: 'மார்பை காட்டு / Breast show',             prompt: 'topless, showing breasts, bare chest' },
+  { id: 'seductive', label: 'Seductive pose / கவர்ச்சி நிலை',          prompt: 'seductive pose, alluring, provocative look' },
+  { id: 'wet',       label: 'Wet clothes / நனைந்த உடை',               prompt: 'wet clothes, drenched, see through wet fabric' },
+  { id: 'legs',      label: 'கால் விரித்து காட்டு / Legs spread',      prompt: 'legs spread wide, revealing pose' },
+  { id: 'saree',     label: 'சேலை தூக்கி காட்டு',                     prompt: 'lifting saree up, revealing thighs, traditional saree' },
+  { id: 'sleeping',  label: 'தூங்கும் போது / Sleeping exposed',        prompt: 'sleeping pose, exposed, lying down' },
+  { id: 'halfbreast',label: 'மொலை பாதி தெரியும் / Half breast',        prompt: 'half breast visible, deep cleavage, low cut top' },
+];
+
 export default function ChatScreen({ route, navigation }: Props) {
   const { provider, persona } = route.params;
 
@@ -37,6 +50,7 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [showGenModal, setShowGenModal] = useState(false);
   const [genPrompt, setGenPrompt] = useState('');
+  const [selectedStyleId, setSelectedStyleId] = useState('normal');
   const [generatingPhoto, setGeneratingPhoto] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | undefined>(persona?.avatarPhotoUri);
   const [fullViewImg, setFullViewImg] = useState<string | null>(null);
@@ -167,11 +181,14 @@ export default function ChatScreen({ route, navigation }: Props) {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 
     try {
+      const style = PHOTO_STYLES.find(s => s.id === selectedStyleId);
+      const stylePrompt = style ? style.prompt : '';
+      const combined = [stylePrompt, genPrompt.trim()].filter(Boolean).join(', ');
       const result = await generateImage({
         imgFace: persona.faceDesc,
         imgBody: persona.bodyDesc,
         imgAttire: persona.attireDesc,
-        imagePrompt: genPrompt.trim() || undefined,
+        imagePrompt: combined || undefined,
         personaName: persona.name,
         mode: 'single',
       });
@@ -302,7 +319,7 @@ export default function ChatScreen({ route, navigation }: Props) {
         </View>
       </KeyboardAvoidingView>
 
-      {/* ── Stable Horde Generate Modal ── */}
+      {/* ── AI Photo Style Picker Modal ── */}
       <Modal
         visible={showGenModal}
         transparent
@@ -314,11 +331,11 @@ export default function ChatScreen({ route, navigation }: Props) {
           activeOpacity={1}
           onPress={() => setShowGenModal(false)}
         >
-          <TouchableOpacity activeOpacity={1}>
+          <TouchableOpacity activeOpacity={1} style={{ width: '100%' }}>
             <View style={styles.pickerSheet}>
               <View style={styles.pickerHandle} />
               <View style={styles.pickerHeader}>
-                <Text style={styles.pickerTitle}>🎨 AI Photo Generate</Text>
+                <Text style={styles.pickerTitle}>📷 Photo Style தேர்வு செய்</Text>
                 <TouchableOpacity onPress={() => setShowGenModal(false)}>
                   <Text style={styles.pickerClose}>✕</Text>
                 </TouchableOpacity>
@@ -330,8 +347,40 @@ export default function ChatScreen({ route, navigation }: Props) {
                   </Text>
                 </View>
               )}
-              <View style={{ padding: 16 }}>
-                <Text style={styles.genLabel}>Scene / Pose (optional)</Text>
+
+              {/* Style List */}
+              <ScrollView
+                style={{ maxHeight: 300 }}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                {PHOTO_STYLES.map((style, idx) => {
+                  const isSelected = style.id === selectedStyleId;
+                  return (
+                    <TouchableOpacity
+                      key={style.id}
+                      style={[
+                        styles.styleRow,
+                        isSelected && styles.styleRowSelected,
+                        idx === PHOTO_STYLES.length - 1 && { borderBottomWidth: 0 },
+                      ]}
+                      onPress={() => setSelectedStyleId(style.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.styleRadio, isSelected && styles.styleRadioSelected]}>
+                        {isSelected && <View style={styles.styleRadioDot} />}
+                      </View>
+                      <Text style={[styles.styleLabel, isSelected && styles.styleLabelSelected]}>
+                        {style.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Optional extra prompt */}
+              <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                <Text style={styles.genLabel}>கூடுதல் Scene / Pose (optional)</Text>
                 <TextInput
                   style={styles.genInput}
                   value={genPrompt}
@@ -340,9 +389,6 @@ export default function ChatScreen({ route, navigation }: Props) {
                   placeholderTextColor="#aaa"
                   multiline
                 />
-                <Text style={styles.genHint}>
-                  Empty-ஆ விட்டா character default pose-ல் generate ஆகும்
-                </Text>
                 <TouchableOpacity
                   style={styles.genBtn}
                   onPress={handleGeneratePhoto}
@@ -452,6 +498,21 @@ const styles = StyleSheet.create({
   pickerClose: { fontSize: 20, color: '#888', padding: 4 },
   pickerCharInfo: { backgroundColor: '#e8f5e9', borderRadius: 8, padding: 10, marginTop: 10 },
   pickerCharText: { color: '#2e7d32', fontSize: 13 },
+  // Style picker rows
+  styleRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 13,
+    paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
+  },
+  styleRowSelected: { backgroundColor: '#f0f4ff' },
+  styleRadio: {
+    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
+    borderColor: '#bbb', marginRight: 12, justifyContent: 'center', alignItems: 'center',
+  },
+  styleRadioSelected: { borderColor: '#6C63FF' },
+  styleRadioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#6C63FF' },
+  styleLabel: { fontSize: 14.5, color: '#333', flex: 1 },
+  styleLabelSelected: { color: '#6C63FF', fontWeight: '600' },
+  // Viewer
   viewerBg: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
   viewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 8 },
   viewerCloseText: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
