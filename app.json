@@ -30,18 +30,6 @@
       "eas": {
         "projectId": "8fa7f4af-082b-4b25-8910-5d79cabafdf8"
       }
-    },
-    "plugins": [
-      "./plugins/withExpoUpdatesKotlinFix"
-    ],
-    "updates": {
-      "url": "https://u.expo.dev/8fa7f4af-082b-4b25-8910-5d79cabafdf8",
-      "enabled": true,
-      "fallbackToCacheTimeout": 0,
-      "checkAutomatically": "NEVER"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     }
   }
 }
