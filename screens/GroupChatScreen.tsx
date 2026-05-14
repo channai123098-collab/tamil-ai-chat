@@ -53,7 +53,7 @@ export default function GroupChatScreen({ route }: Props) {
         historyRef.current.push({ role: 'assistant', content: `${persona.name}: ${reply}` });
         await new Promise(r => setTimeout(r, 400));
       }
-    } catch (err) {
+    } catch (err: any) {
       Alert.alert('பிழை', err?.message || 'பதில் வரவில்லை');
     } finally {
       setLoading(false);
@@ -61,7 +61,7 @@ export default function GroupChatScreen({ route }: Props) {
     }
   }, [input, loading, personas]);
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item }: { item: Msg }) => {
     const isUser = item.role === 'user';
     return (
       <View style={[styles.row, isUser ? styles.userRow : styles.aiRow]}>
