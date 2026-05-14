@@ -1,11 +1,5 @@
 const API_BASE_URL = 'https://tamil-chat-api.onrender.com';
 
-const GK = [
-  'gsk_mOU7Ga8VQZEO08iB',
-  'aFp4WGdyb3FYWIu28tt',
-  'a5xBop2Kf3oBJP9CP',
-].join('');
-
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -17,7 +11,7 @@ export interface Message {
 
 export async function sendMessage(
   messages: { role: string; content: string }[],
-  _provider: string = 'groq',
+  _provider: string = 'gemini',
   systemPrompt?: string,
 ): Promise<string> {
   const controller = new AbortController();
@@ -29,8 +23,7 @@ export async function sendMessage(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages,
-        provider: 'groq',
-        groqApiKey: GK,
+        provider: 'gemini',
         ...(systemPrompt ? { systemPrompt } : {}),
       }),
       signal: controller.signal,
@@ -46,7 +39,7 @@ export async function sendMessage(
 }
 
 export async function getProviders(): Promise<string[]> {
-  return ['groq'];
+  return ['gemini'];
 }
 
 export async function generateImage(params: {
