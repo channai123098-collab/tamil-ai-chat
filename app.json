@@ -12,12 +12,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#075E54"
     },
-    "updates": {
-      "url": "https://u.expo.dev/2feba529-e691-4529-9065-7c3dbc0a9f13"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smk1.tamilaichat"
@@ -36,6 +30,7 @@
       "eas": {
         "projectId": "8fa7f4af-082b-4b25-8910-5d79cabafdf8"
       }
-    }
+    },
+    "plugins": []
   }
 }
