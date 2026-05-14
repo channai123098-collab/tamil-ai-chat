@@ -134,8 +134,19 @@ export default function CloudStorageScreen({ navigation }: Props) {
         ) : filtered.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyIcon}>☁️</Text>
-            <Text style={styles.emptyText}>இங்க images இல்லை</Text>
-            <Text style={styles.emptySubText}>Chat-ல் AI image generate பண்ணா இங்க save ஆகும்</Text>
+            <Text style={styles.emptyText}>
+              {activeCategory === 'all' ? 'இன்னும் images இல்லை' : `${activeCategory} images இல்லை`}
+            </Text>
+            <Text style={styles.emptySubText}>
+              {'Chat-ல் AI கிட்ட "image போடு" / "photo generate பண்ணு" னு கேளுங்க — அந்த images இங்க automatically save ஆகும் 📸'}
+            </Text>
+            <View style={styles.hintBox}>
+              <Text style={styles.hintTitle}>💡 எப்படி use பண்றது?</Text>
+              <Text style={styles.hintLine}>1️⃣  Chat screen-ல் யாரையாவது திற</Text>
+              <Text style={styles.hintLine}>2️⃣  "என் photo generate பண்ணு" கேளு</Text>
+              <Text style={styles.hintLine}>3️⃣  Image generate ஆனா இங்க save ஆகும்</Text>
+              <Text style={styles.hintLine}>4️⃣  Swap பண்ண FaceSwap button use பண்ணு</Text>
+            </View>
           </View>
         ) : (
           <View style={styles.grid}>
@@ -213,8 +224,14 @@ const styles = StyleSheet.create({
   thumb: { width: THUMB, height: THUMB, backgroundColor: '#2a2a4a' },
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 40 },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
-  emptyText: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
-  emptySubText: { color: '#888', fontSize: 13, textAlign: 'center', lineHeight: 20 },
+  emptyText: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
+  emptySubText: { color: '#888', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  hintBox: {
+    backgroundColor: '#16213e', borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: '#2a2a5a', width: '100%',
+  },
+  hintTitle: { color: '#6C63FF', fontSize: 14, fontWeight: '700', marginBottom: 10 },
+  hintLine: { color: '#ccc', fontSize: 13, lineHeight: 26 },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center' },
   modalClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 8 },
   modalCloseText: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
