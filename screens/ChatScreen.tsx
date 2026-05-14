@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
-import { sendMessage, Message, generateImage, listCloudinaryImages } from '../services/api';
+import { sendMessage, Message, generateImage } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import NetInfo from '@react-native-community/netinfo';
@@ -19,24 +19,6 @@ type ChatNavProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 interface Props { route: ChatRouteProp; navigation: ChatNavProp; }
 
 const { width, height } = Dimensions.get('window');
-
-const PHOTO_STYLES = [
-  { id: 'normal',     label: 'Normal Photo 📷',               folder: 'Normal Photo' },
-  { id: 'nude',       label: 'Nude / நேரடி நிர்வாணம் 🔞',    folder: 'Nude' },
-  { id: 'seminude',   label: 'Semi-nude / அரை நிர்வாணம்',    folder: 'Semi Nude' },
-  { id: 'breast',     label: 'மார்பை காட்டு / Breast show',  folder: 'Breast Show' },
-  { id: 'cleavage',   label: 'Cleavage / மார்பு பிளவு',      folder: 'Cleavage' },
-  { id: 'halfbreast', label: 'Half Breast / மொலை பாதி',      folder: 'Half Breast' },
-  { id: 'lingerie',   label: 'Lingerie / உள்ளாடை',           folder: 'Lingerie' },
-  { id: 'seductive',  label: 'Seductive pose / கவர்ச்சி',    folder: 'Seductive' },
-  { id: 'wet',        label: 'Wet clothes / நனைந்த உடை',     folder: 'Wet Clothes' },
-  { id: 'legs',       label: 'Legs Spread / கால் விரித்து',  folder: 'Legs Spread' },
-  { id: 'saree',      label: 'சேலை தூக்கி காட்டு',           folder: 'Saree' },
-  { id: 'sleeping',   label: 'தூங்கும் போது / Sleeping',     folder: 'Sleeping' },
-  { id: 'highslit',   label: 'High Slit',                     folder: 'High Slit' },
-  { id: 'buttocks',   label: 'Buttocks',                      folder: 'Buttocks' },
-  { id: 'lowneck',    label: 'Low Neckline',                  folder: 'Low Neckline' },
-];
 
 interface CloudImg { url: string; public_id: string; }
 
@@ -58,12 +40,6 @@ export default function ChatScreen({ route, navigation }: Props) {
   const [generatingPhoto, setGeneratingPhoto] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | undefined>(persona?.avatarPhotoUri);
   const [fullViewImg, setFullViewImg] = useState<string | null>(null);
-
-  // Cloudinary viewer state (kept for My Cloud photos)
-  const [viewerImages, setViewerImages] = useState<CloudImg[]>([]);
-  const [viewerIndex, setViewerIndex] = useState(0);
-  const [viewerStyle, setViewerStyle] = useState('');
-  const [showViewer, setShowViewer] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -257,8 +233,6 @@ export default function ChatScreen({ route, navigation }: Props) {
     );
   };
 
-  const currentImg = viewerImages[viewerIndex];
-
   return (
     <SafeAreaView style={styles.container}>
       {!isOnline && (
@@ -409,64 +383,6 @@ export default function ChatScreen({ route, navigation }: Props) {
         </View>
       </Modal>
 
-      {/* ── Image Viewer Modal ── */}
-      <Modal
-        visible={showViewer}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setShowViewer(false)}
-      >
-        <View style={styles.viewerBg}>
-          {/* Header */}
-          <View style={styles.viewerHeader}>
-            <TouchableOpacity onPress={() => setShowViewer(false)} style={styles.viewerClose}>
-              <Text style={styles.viewerCloseText}>✕</Text>
-            </TouchableOpacity>
-            <Text style={styles.viewerTitle} numberOfLines={1}>{viewerStyle}</Text>
-            <Text style={styles.viewerCount}>
-              {viewerImages.length > 0 ? `${viewerIndex + 1} / ${viewerImages.length}` : ''}
-            </Text>
-          </View>
-
-          {/* Image */}
-          <View style={styles.viewerImgWrap}>
-            {currentImg ? (
-              <Image
-                source={{ uri: currentImg.url }}
-                style={styles.viewerImg}
-                resizeMode="contain"
-              />
-            ) : (
-              <ActivityIndicator color="#fff" size="large" />
-            )}
-          </View>
-
-          {/* Navigation */}
-          <View style={styles.viewerNav}>
-            <TouchableOpacity
-              style={[styles.navBtn, viewerIndex === 0 && styles.navBtnDisabled]}
-              onPress={() => setViewerIndex(i => Math.max(0, i - 1))}
-              disabled={viewerIndex === 0}
-            >
-              <Text style={styles.navBtnText}>‹ Prev</Text>
-            </TouchableOpacity>
-
-            <View style={styles.navCounter}>
-              <Text style={styles.navCounterText}>
-                Image {viewerImages.length > 0 ? viewerIndex + 1 : 0} of {viewerImages.length}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.navBtn, viewerIndex >= viewerImages.length - 1 && styles.navBtnDisabled]}
-              onPress={() => setViewerIndex(i => Math.min(viewerImages.length - 1, i + 1))}
-              disabled={viewerIndex >= viewerImages.length - 1}
-            >
-              <Text style={styles.navBtnText}>Next ›</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -536,23 +452,8 @@ const styles = StyleSheet.create({
   pickerClose: { fontSize: 20, color: '#888', padding: 4 },
   pickerCharInfo: { backgroundColor: '#e8f5e9', borderRadius: 8, padding: 10, marginTop: 10 },
   pickerCharText: { color: '#2e7d32', fontSize: 13 },
-  styleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f2f2f2', gap: 12 },
-  styleArrow: { fontSize: 18 },
-  styleLabel: { fontSize: 15, color: '#222', flex: 1 },
-  styleChevron: { fontSize: 20, color: '#aaa' },
-  // Image Viewer
-  viewerBg: { flex: 1, backgroundColor: '#000' },
-  viewerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12, backgroundColor: '#111' },
-  viewerClose: { padding: 8, marginRight: 8 },
-  viewerCloseText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  viewerTitle: { flex: 1, color: '#fff', fontSize: 14, fontWeight: '600' },
-  viewerCount: { color: '#aaa', fontSize: 13, marginLeft: 8 },
-  viewerImgWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  viewerBg: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  viewerClose: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 8 },
+  viewerCloseText: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
   viewerImg: { width, height: height * 0.72 },
-  viewerNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#111' },
-  navBtn: { backgroundColor: '#6C63FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 },
-  navBtnDisabled: { backgroundColor: '#333' },
-  navBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  navCounter: { alignItems: 'center' },
-  navCounterText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });
