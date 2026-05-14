@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, FlatList,
   StyleSheet, StatusBar, Modal,
-  Pressable,
+  Pressable, TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
@@ -149,9 +149,12 @@ export const ALL_PERSONAS: Persona[] = [
 ];
 
 export default function HomeScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [selectedForGroup, setSelectedForGroup] = useState<string[]>([]);
   const [personas, setPersonas] = useState<Persona[]>(ALL_PERSONAS);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadSaved = async () => {
@@ -189,6 +192,13 @@ export default function HomeScreen({ navigation }: Props) {
     loadSaved();
   }, []);
 
+  const filteredPersonas = searchQuery.trim()
+    ? personas.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.lastMsg.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : personas;
+
   const toggleGroupSelect = (id: string) => {
     setSelectedForGroup(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -204,42 +214,33 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   const renderContact = ({ item }: { item: Persona }) => (
-    <View style={styles.contactRow}>
-      <TouchableOpacity
-        style={styles.contactMain}
-        activeOpacity={0.7}
-        onPress={() => navigation.navigate('Chat', {
-          provider: 'groq',
-          providerLabel: item.name,
-          persona: item,
-        })}
-      >
-        <View style={[styles.avatar, { backgroundColor: item.avatarColor }]}>
-          <Text style={styles.avatarText}>{item.emoji}</Text>
+    <TouchableOpacity
+      style={styles.contactRow}
+      activeOpacity={0.7}
+      onPress={() => navigation.navigate('Chat', {
+        provider: 'gemini',
+        providerLabel: item.name,
+        persona: item,
+      })}
+    >
+      <View style={[styles.avatar, { backgroundColor: item.avatarColor }]}>
+        <Text style={styles.avatarText}>{item.emoji}</Text>
+      </View>
+      <View style={styles.contactInfo}>
+        <View style={styles.contactTop}>
+          <Text style={styles.contactName}>{item.name}</Text>
+          <Text style={styles.contactTime}>{item.time}</Text>
         </View>
-        <View style={styles.contactInfo}>
-          <View style={styles.contactTop}>
-            <Text style={styles.contactName}>{item.name}</Text>
-            <Text style={styles.contactTime}>{item.time}</Text>
-          </View>
-          <View style={styles.contactBottom}>
-            <Text style={styles.lastMsg} numberOfLines={1}>{item.lastMsg}</Text>
-            {item.unread ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.unread}</Text>
-              </View>
-            ) : null}
-          </View>
+        <View style={styles.contactBottom}>
+          <Text style={styles.lastMsg} numberOfLines={1}>{item.lastMsg}</Text>
+          {item.unread ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{item.unread}</Text>
+            </View>
+          ) : null}
         </View>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.editBtn}
-        onPress={() => navigation.navigate('EditCharacter', { persona: item })}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <Text style={styles.editIcon}>✏️</Text>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 
   const renderGroupItem = ({ item }: { item: Persona }) => {
@@ -258,28 +259,62 @@ export default function HomeScreen({ navigation }: Props) {
     );
   };
 
+  const fabBottom = insets.bottom + 16;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar backgroundColor="#075E54" barStyle="light-content" />
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tamil AI Chat</Text>
         <View style={styles.headerIcons}>
-          <Text style={styles.headerIcon}>🔍</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setShowSearch(v => !v);
+              setSearchQuery('');
+            }}
+          >
+            <Text style={styles.headerIcon}>🔍</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
             <Text style={styles.headerIcon}>⚙️</Text>
           </TouchableOpacity>
         </View>
       </View>
 
+      {showSearch && (
+        <View style={styles.searchBar}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="தேடுங்க... (Search)"
+            placeholderTextColor="#aaa"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
+              <Text style={styles.searchClearText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
       <FlatList
-        data={personas}
+        data={filteredPersonas}
         keyExtractor={p => p.id}
         renderItem={renderContact}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        contentContainerStyle={{ paddingBottom: fabBottom + 70 * 3 + 30 }}
+        ListEmptyComponent={
+          <View style={styles.noResults}>
+            <Text style={styles.noResultsText}>"{searchQuery}" — கிடைக்கல 😕</Text>
+          </View>
+        }
       />
 
-      <View style={styles.fabContainer}>
+      <View style={[styles.fabContainer, { bottom: fabBottom }]}>
         <TouchableOpacity style={styles.fab} onPress={() => setShowGroupModal(true)}>
           <View style={styles.fabInner}>
             <Text style={styles.fabIconDark}>⊕</Text>
@@ -340,25 +375,37 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
   headerIcons: { flexDirection: 'row', gap: 16 },
   headerIcon: { fontSize: 20, color: '#fff' },
-  contactRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 },
-  contactMain: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  editBtn: { paddingHorizontal: 8, paddingVertical: 4 },
-  editIcon: { fontSize: 16 },
-  avatar: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  contactInfo: { flex: 1, marginLeft: 10 },
-  contactTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
-  contactName: { fontSize: 14, fontWeight: '600', color: '#111' },
+  searchBar: {
+    backgroundColor: '#f5f5f5', flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 12, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#e0e0e0',
+  },
+  searchInput: {
+    flex: 1, fontSize: 15, color: '#111',
+    paddingVertical: 7, paddingHorizontal: 8,
+  },
+  searchClear: { paddingHorizontal: 8, paddingVertical: 4 },
+  searchClearText: { fontSize: 16, color: '#999' },
+  noResults: { alignItems: 'center', paddingTop: 60 },
+  noResultsText: { fontSize: 15, color: '#999' },
+  contactRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 12, paddingVertical: 9,
+  },
+  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+  contactInfo: { flex: 1, marginLeft: 12 },
+  contactTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
+  contactName: { fontSize: 15, fontWeight: '600', color: '#111' },
   contactTime: { fontSize: 11, color: '#888' },
   contactBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  lastMsg: { fontSize: 12, color: '#888', flex: 1 },
+  lastMsg: { fontSize: 13, color: '#888', flex: 1 },
   badge: {
     backgroundColor: '#25D366', borderRadius: 9,
     minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
   },
   badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  separator: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 64 },
-  fabContainer: { position: 'absolute', bottom: 20, right: 14, gap: 10 },
+  separator: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 72 },
+  fabContainer: { position: 'absolute', right: 14, gap: 10 },
   fab: {
     width: 60, height: 60, borderRadius: 16,
     backgroundColor: '#E8F5F0',
