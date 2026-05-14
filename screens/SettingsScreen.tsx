@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const API_BASE = 'https://tamil-chat-api.onrender.com';
 const APP_VERSION = '1.2.0';
-const LATEST_APK_URL = 'https://expo.dev/artifacts/eas/m6q6Vd9FkV5kVwHxZwEUFw.apk';
+const LATEST_APK_URL = 'https://expo.dev/artifacts/eas/kSXWfdv4e7iY3GTwRvBCPY.apk';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
