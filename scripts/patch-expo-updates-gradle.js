@@ -1,29 +1,69 @@
 const fs = require('fs');
 const path = require('path');
 
-const gradleFile = path.join(
-  __dirname, '..', 'node_modules', 'expo-updates',
-  'expo-updates-gradle-plugin', 'build.gradle.kts'
+const pluginDir = path.join(
+  __dirname, '..', 'node_modules', 'expo-updates', 'expo-updates-gradle-plugin'
 );
 
-if (!fs.existsSync(gradleFile)) {
-  console.log('patch-expo-updates: file not found, skipping');
+if (!fs.existsSync(pluginDir)) {
+  console.log('patch-expo-updates: plugin dir not found, skipping');
   process.exit(0);
 }
 
-let content = fs.readFileSync(gradleFile, 'utf8');
+// Stub build.gradle.kts — no react-native-gradle-plugin, no AGP dependency issues
+const stubBuildGradle = `plugins {
+  kotlin("jvm") version("2.1.20")
+  id("java-gradle-plugin")
+}
 
-// Fix 1: Kotlin JVM version → 2.1.20 (matches EAS server Kotlin)
-content = content.replace(
-  /kotlin\("jvm"\)\s*version\("[^"]+"\)/g,
-  'kotlin("jvm") version("2.1.20")'
-);
+repositories {
+  google()
+  mavenCentral()
+}
 
-// Fix 2: react-native-gradle-plugin: no version + wrong scope → compileOnly with version
-content = content.replace(
-  /implementation\("com\.facebook\.react:react-native-gradle-plugin(?::[^"]*)?"[)]/g,
-  'compileOnly("com.facebook.react:react-native-gradle-plugin:0.81.5")'
-);
+dependencies {
+  implementation(gradleApi())
+}
 
-fs.writeFileSync(gradleFile, content, 'utf8');
-console.log('patch-expo-updates: ✅ Kotlin→2.1.20, RN plugin→compileOnly:0.81.5');
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
+group = "expo.modules"
+
+gradlePlugin {
+  plugins {
+    register("expoUpdatesPlugin") {
+      id = "expo-updates-gradle-plugin"
+      implementationClass = "expo.modules.updates.ExpoUpdatesPlugin"
+    }
+  }
+}
+`;
+
+const stubPluginKt = `package expo.modules.updates
+
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+
+class ExpoUpdatesPlugin : Plugin<Project> {
+  override fun apply(project: Project) {
+    // Stub: expo-updates OTA handled via JS runtime
+  }
+}
+`;
+
+// Write stub build.gradle.kts
+fs.writeFileSync(path.join(pluginDir, 'build.gradle.kts'), stubBuildGradle);
+
+// Write stub ExpoUpdatesPlugin.kt
+const ktDir = path.join(pluginDir, 'src/main/kotlin/expo/modules/updates');
+fs.mkdirSync(ktDir, { recursive: true });
+// Remove all old kt files
+fs.readdirSync(ktDir).forEach(f => {
+  if (f.endsWith('.kt')) fs.unlinkSync(path.join(ktDir, f));
+});
+fs.writeFileSync(path.join(ktDir, 'ExpoUpdatesPlugin.kt'), stubPluginKt);
+
+console.log('patch-expo-updates: ✅ Replaced expo-updates-gradle-plugin with no-op stub (Kotlin 2.1.20, no RN dep)');
