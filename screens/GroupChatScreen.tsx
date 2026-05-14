@@ -39,35 +39,21 @@ export default function GroupChatScreen({ route }: Props) {
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
-
-    const userMsg: Msg = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text,
-      timestamp: new Date(),
-    };
+    const userMsg: Msg = { id: Date.now().toString(), role: 'user', content: text, timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-
     historyRef.current.push({ role: 'user', content: text });
-
     try {
       for (const persona of personas) {
         const systemPrompt = persona.prompt + '\n\nநீ ஒரு group chat-ல் இருக்கிறாய். மற்ற characters-ம் இருக்காங்க. Short-ஆ reply பண்ணு.';
-        const reply = await sendMessage([...historyRef.current], 'groq', systemPrompt);
-        const aiMsg: Msg = {
-          id: `${Date.now()}-${persona.id}`,
-          role: 'assistant',
-          persona,
-          content: reply,
-          timestamp: new Date(),
-        };
+        const reply = await sendMessage([...historyRef.current], 'gemini', systemPrompt);
+        const aiMsg: Msg = { id: `${Date.now()}-${persona.id}`, role: 'assistant', persona, content: reply, timestamp: new Date() };
         setMessages(prev => [...prev, aiMsg]);
         historyRef.current.push({ role: 'assistant', content: `${persona.name}: ${reply}` });
         await new Promise(r => setTimeout(r, 400));
       }
-    } catch (err: any) {
+    } catch (err) {
       Alert.alert('பிழை', err?.message || 'பதில் வரவில்லை');
     } finally {
       setLoading(false);
@@ -75,7 +61,7 @@ export default function GroupChatScreen({ route }: Props) {
     }
   }, [input, loading, personas]);
 
-  const renderItem = ({ item }: { item: Msg }) => {
+  const renderItem = ({ item }) => {
     const isUser = item.role === 'user';
     return (
       <View style={[styles.row, isUser ? styles.userRow : styles.aiRow]}>
@@ -148,10 +134,7 @@ export default function GroupChatScreen({ route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ECE5DD' },
   flex: { flex: 1 },
-  groupBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#128C7E',
-    paddingHorizontal: 14, paddingVertical: 8, gap: 6,
-  },
+  groupBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#128C7E', paddingHorizontal: 14, paddingVertical: 8, gap: 6 },
   miniAvatar: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   miniAvatarTxt: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
   groupBarTxt: { color: '#dcf8c6', fontSize: 12, marginLeft: 4 },
@@ -169,19 +152,9 @@ const styles = StyleSheet.create({
   timeTxt: { fontSize: 10, color: '#888', alignSelf: 'flex-end', marginTop: 3 },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, paddingLeft: 14 },
   loadingTxt: { color: '#075E54', fontSize: 12 },
-  inputBar: {
-    flexDirection: 'row', alignItems: 'flex-end', padding: 8,
-    backgroundColor: '#F0F0F0', borderTopWidth: 1, borderTopColor: '#ddd', gap: 8,
-  },
-  input: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 24,
-    paddingHorizontal: 16, paddingVertical: 10, fontSize: 14,
-    maxHeight: 100, color: '#111', borderWidth: 1, borderColor: '#ddd',
-  },
-  sendBtn: {
-    backgroundColor: '#25D366', width: 44, height: 44,
-    borderRadius: 22, justifyContent: 'center', alignItems: 'center', elevation: 2,
-  },
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, backgroundColor: '#F0F0F0', borderTopWidth: 1, borderTopColor: '#ddd', gap: 8 },
+  input: { flex: 1, backgroundColor: '#fff', borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, maxHeight: 100, color: '#111', borderWidth: 1, borderColor: '#ddd' },
+  sendBtn: { backgroundColor: '#25D366', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', elevation: 2 },
   sendBtnDisabled: { backgroundColor: '#a8d5b5' },
   sendIcon: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
 });
