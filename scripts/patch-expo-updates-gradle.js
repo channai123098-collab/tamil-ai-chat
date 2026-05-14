@@ -13,15 +13,17 @@ if (!fs.existsSync(gradleFile)) {
 
 let content = fs.readFileSync(gradleFile, 'utf8');
 
-// Patch Kotlin version from 1.9.x to 2.1.20
-const patched = content.replace(
-  /kotlin\("jvm"\)\s+version\("1\.\d+\.\d+"\)/,
+// Fix 1: Kotlin JVM version → 2.1.20 (matches EAS server Kotlin)
+content = content.replace(
+  /kotlin\("jvm"\)\s*version\("[^"]+"\)/g,
   'kotlin("jvm") version("2.1.20")'
 );
 
-if (patched === content) {
-  console.log('patch-expo-updates: already patched or pattern not found');
-} else {
-  fs.writeFileSync(gradleFile, patched, 'utf8');
-  console.log('patch-expo-updates: ✅ Kotlin 1.9.x → 2.1.20 in expo-updates-gradle-plugin');
-}
+// Fix 2: react-native-gradle-plugin: no version + wrong scope → compileOnly with version
+content = content.replace(
+  /implementation\("com\.facebook\.react:react-native-gradle-plugin(?::[^"]*)?"[)]/g,
+  'compileOnly("com.facebook.react:react-native-gradle-plugin:0.81.5")'
+);
+
+fs.writeFileSync(gradleFile, content, 'utf8');
+console.log('patch-expo-updates: ✅ Kotlin→2.1.20, RN plugin→compileOnly:0.81.5');
