@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tamil AI Chat",
     "slug": "tamil-ai-chat",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,11 +26,26 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [],
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "2feba529-e691-4529-9065-7c3dbc0a9f13"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2feba529-e691-4529-9065-7c3dbc0a9f13"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
